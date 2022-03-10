@@ -1,0 +1,59 @@
+---
+- name: Install Apache Tomcat10 using ansible
+  hosts: 192.168.149.97
+  remote_user: imadaqra1
+  become: true
+  vars:
+    tomcat_port: 9090
+    
+  tasks:
+    - name: update_repo
+      apt:
+        name: "*"
+        state: latest
+ 
+    - name: Create a Tomcat User
+      user:
+        name: tomcat
+ 
+    - name: Create a Tomcat Group
+      group:
+        name: tomcat
+ 
+    - name: Install JAVA
+      apt:
+        name: default-jdk
+        state: present
+ 
+ 
+    - name: Create a Tomcat Directory
+      file:
+        path: /opt/tomcat10
+        owner: tomcat
+        group: tomcat
+        mode: 755
+        recurse: yes
+ 
+    - name: download & unarchive tomcat10 
+      unarchive:
+        src: http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.61/bin/apache-tomcat-7.0.61.tar.gz
+        dest: /home/imadaqra1/tomcat10
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+ 
+    - name: Change ownership of tomcat directory
+      file:
+        path: /home/imadaqra1/tomcat10
+        owner: tomcat
+        group: tomcat
+        mode: "u+rwx,g+rx,o=rx"
+        recurse: yes
+        state: directory
+ 
+    - name: change port
+      template:
+         src: server.xml.j2
+         dest: /home/imadaqra1/tomcat10/conf/server.xml
+        
+    - name: Start and Enable Tomcat 10 on sever
+      shell: nohup /home/imadaqra1/tomcat10/bin/startup.sh &
